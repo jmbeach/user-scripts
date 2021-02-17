@@ -23,7 +23,7 @@ fetch(filterDataUrl, {
         'accept-encoding': 'gzip, deflate, br',
         'connection': 'keep-alive',
         'x-framework-xsrf-token': token,
-        'x-gmail-btai': JSON.stringify({"3":{"6":0,"10":1,"13":1,"15":0,"16":1,"17":1,"18":0,"19":1,"22":1,"23":1,"24":1,"25":1,"26":1,"27":1,"28":1,"29":0,"30":1,"31":1,"32":1,"33":1,"34":1,"35":0,"36":1,"37":"en","38":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36","39":1,"40":0,"41":25,"43":0,"44":1,"45":0,"46":1,"47":1,"48":1,"49":1,"50":1,"51":0,"52":1,"53":1,"54":0,"55":1,"56":1,"57":0,"58":0,"60":0,"61":0},"5":"d6908662ef","7":25,"8":"gmail_fe_210208.03_p3","9":1,"10":5,"11":"","12":-21600000,"13":"-06:00","14":1,"16":357259581,"17":"","18":"","19":"1613563252931"}),
+        'x-gmail-btai': JSON.stringify({ "3": { "6": 0, "10": 1, "13": 1, "15": 0, "16": 1, "17": 1, "18": 0, "19": 1, "22": 1, "23": 1, "24": 1, "25": 1, "26": 1, "27": 1, "28": 1, "29": 0, "30": 1, "31": 1, "32": 1, "33": 1, "34": 1, "35": 0, "36": 1, "37": "en", "38": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36", "39": 1, "40": 0, "41": 25, "43": 0, "44": 1, "45": 0, "46": 1, "47": 1, "48": 1, "49": 1, "50": 1, "51": 0, "52": 1, "53": 1, "54": 0, "55": 1, "56": 1, "57": 0, "58": 0, "60": 0, "61": 0 }, "5": "d6908662ef", "7": 25, "8": "gmail_fe_210208.03_p3", "9": 1, "10": 5, "11": "", "12": -21600000, "13": "-06:00", "14": 1, "16": 357259581, "17": "", "18": "", "19": "1613563252931" }),
         'user-agent': 'PostmanRuntime/7.26.8'
     },
     body: JSON.stringify({
@@ -177,43 +177,60 @@ function showNoFiltersFoundPopup() {
     popup.content.appendChild(text);
 }
 
-function addFindFilterButton() {
-    const menus = document.querySelectorAll('div[role=menu].b7.J-M')
-    for (const menu of menus) {
-        const existing = document.getElementById('btnFindfilter')
-        if (existing) {
-            return;
-        }
-    
-        const button = `<div class="J-N" role="menuitem" id="btnFindfilter" jslog="21576; u014N:cOuCgd,Kr2w4b" style="user-select: none;">
-        <div class="J-N-Jz">
-            <div>
-                <div id=":qo" class="cj" act="94"><img class="mL f4 J-N-JX" src="images/cleardot.gif" alt="" style="background-image: url(https://www.gstatic.com/images/icons/material/system/1x/search_black_20dp.png)">Find Filter</div>
-            </div>
-        </div>
-    </div>`
-        const buttonEl = document.createElement('div')
-        buttonEl.innerHTML = button;
-        buttonEl.firstChild.onclick = function () {
-            filters = findMatchingRules(parseActiveEmail().from);
-            if (filters && filters.length > 1) {
-                showFoundFiltersPopup(filters);
-            } else if (filters && filters.length === 1) {
-                goToFilter(filters[0]);
-            } else {
-                showNoFiltersFoundPopup();
+function getMenus() {
+    return document.querySelectorAll('div[role=menu].b7.J-M')
+}
+
+function waitForMenus() {
+    return new Promise(resolve => {
+        const interval = setInterval(() => {
+            const menus = getMenus();
+            if (menus && menus.length) {
+                clearInterval(interval);
+                resolve(menus);
             }
+        }, 250);
+    })
+}
+
+function addFindFilterButton() {
+    waitForMenus().then(menus => {
+        for (const menu of menus) {
+            const existing = menu.querySelector('.btnFindfilter')
+            if (existing) {
+                return;
+            }
+
+            const button = `<div class="J-N btnFindfilter" role="menuitem" jslog="21576; u014N:cOuCgd,Kr2w4b" style="user-select: none;">
+            <div class="J-N-Jz">
+                <div>
+                    <div id=":qo" class="cj" act="94"><img class="mL f4 J-N-JX" src="images/cleardot.gif" alt="" style="background-image: url(https://www.gstatic.com/images/icons/material/system/1x/search_black_20dp.png)">Find Filter</div>
+                </div>
+            </div>
+        </div>`
+            const buttonEl = document.createElement('div')
+            buttonEl.innerHTML = button;
+            buttonEl.firstChild.onclick = function () {
+                filters = findMatchingRules(parseActiveEmail().from);
+                if (filters && filters.length > 1) {
+                    showFoundFiltersPopup(filters);
+                } else if (filters && filters.length === 1) {
+                    goToFilter(filters[0]);
+                } else {
+                    showNoFiltersFoundPopup();
+                }
+            }
+            buttonEl.firstChild.onmouseover = e => {
+                e.currentTarget.setAttribute('class', 'J-N J-N-JT');
+            }
+
+            buttonEl.firstChild.onmouseleave = e => {
+                e.currentTarget.setAttribute('class', 'J-N');
+            }
+
+            menu.appendChild(buttonEl.firstChild);
         }
-        buttonEl.firstChild.onmouseover = e => {
-            e.currentTarget.setAttribute('class', 'J-N J-N-JT');
-        }
-    
-        buttonEl.firstChild.onmouseleave = e => {
-            e.currentTarget.setAttribute('class', 'J-N');
-        }
-    
-        menu.appendChild(buttonEl.firstChild);
-    }
+    });
 }
 
 function getEmailGrid() {
@@ -236,7 +253,7 @@ function waitForEmail() {
                 console.log('waiting for active email')
                 return;
             }
-    
+
             clearInterval(interval);
             resolve();
         }, 250);
@@ -252,13 +269,13 @@ function addEmailClickHandlers() {
         emailEl.onclick = () => {
             try {
                 emailObserver.disconnect();
-            } catch (err) {}
+            } catch (err) { }
             waitForEmail().then(() => {
                 addFindFilterButton();
                 emailObserver = new MutationObserver(mutationList => {
                     console.log('email mutation list', mutationList);
                 });
-    
+
                 emailObserver.observe(getActiveEmail(), {
                     childList: true
                 });
