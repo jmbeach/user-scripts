@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           My Script
+// @name           Gmail Filter/Rule Finder
 // @description    A brief description of your script
 // @author         Your Name
 // @include        https://mail.google.com*
@@ -8,12 +8,54 @@
 
 'use-strict';
 
+const scripts = [...document.getElementsByTagName('script')]
+const script = scripts.map(x => x.innerHTML.trim()).filter(x => x.startsWith('_GM_setData'))[0]
+const scriptParseRegex = /sdpc","([^"]+)/
+const token = scriptParseRegex.exec(script)[1]
+const filterDataUrl = 'https://mail.google.com/sync/u/0/i/s?hl=en&c=0'
 const filterUrl = 'https://mail.google.com/mail/u/0/?ui=2&ik=d6908662ef&jsver=8HwiEZd1ZS8.en.&cbl=gmail_fe_210205.08_p3&view=fdl&zx=or7ar6po6gna';
 const formData = new FormData()
-formData.append('tfi', '564913279819412674,6502234381025998287,954838030823100862,z0000001609168320654*6421297474395585715,z0000001612190189872*4729536718674188861,z0000001612725995810*4241382161248637424,z0000001612726833498*1022883995041212718,z0000001612727031577*7469650801734823110,z0000001612727079818*9179209173190379660,z0000001612727119019*1363745348298479445,z0000001612727140894*3369425243435578162,z0000001612727181644*0110227076110377724,z0000001612738018049*4075131889468033193,z0000001612801481333*4636788238658466074,z0000001612801551632*0771752096714410171,z0000001612865982731*1043427023003409992,z0000001612866028429*7165400401114514873,z0000001612866087759*8971843072935479720,z0000001612866341923*6440496965065644560,z0000001612866421056*5074224086466425401,z0000001612866459830*1247417980096794268,z0000001612867120671*1143140153947481699,z0000001612869838724*1164719178243452447,z0000001612869871194*5958554085973244823,z0000001612879272387*3694572167280191790,z0000001612893671249*3258120632413067623,z0000001612914443833*3208194262210394590,z0000001612914519797*4615046091958149991,z0000001612914709657*2384553422735397476,z0000001612914787848*7490625382074206364,z0000001612914846995*1278935940861789071,z0000001612914937480*7504070481429677978,z0000001612915005554*4861484489107452225,z0000001612915043974*8717281031496297097,z0000001612915127632*4941068997368988564,z0000001612915194968*4680980866104256865,z0000001612915245231*8785849257399161384,z0000001612915298081*4003288129257110208,z0000001612915329101*2773908217805619877,z0000001612915364665*5190826611924167878,z0000001612921978948*7646883577139875210,z0000001612990089758*1003486946883000492,z0000001612990154051*5366056971498233810,z0000001612990238965*5438612686932883648,z0000001612990278236*8627542192076129281,z0000001612990337276*4497787724550897230,z0000001612990498475*0181432936668798859,z0000001612990535331*6782091089818603064,z0000001612990569287*1242426109952290320,z0000001613008862360*3587783141017594005,z0000001613009364874*1259403304852458391,z0000001613009433029*0988522307871129014,z0000001613009465833*6643422217050153559,z0000001613149736975*0249284965590476690,z0000001613228230395*7904452358018377391,z0000001613228290777*5561109913936690488,z0000001613228437451*5665118247844809330,z0000001613228599309*0209403304976698626')
-fetch(filterUrl, {
+fetch(filterDataUrl, {
     method: 'POST',
-    body: formData
+    headers: {
+        'content-type': 'application/json',
+        'accept': '*/*',
+        'accept-encoding': 'gzip, deflate, br',
+        'connection': 'keep-alive',
+        'x-framework-xsrf-token': token,
+        'x-gmail-btai': JSON.stringify({"3":{"6":0,"10":1,"13":1,"15":0,"16":1,"17":1,"18":0,"19":1,"22":1,"23":1,"24":1,"25":1,"26":1,"27":1,"28":1,"29":0,"30":1,"31":1,"32":1,"33":1,"34":1,"35":0,"36":1,"37":"en","38":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36","39":1,"40":0,"41":25,"43":0,"44":1,"45":0,"46":1,"47":1,"48":1,"49":1,"50":1,"51":0,"52":1,"53":1,"54":0,"55":1,"56":1,"57":0,"58":0,"60":0,"61":0},"5":"d6908662ef","7":25,"8":"gmail_fe_210208.03_p3","9":1,"10":5,"11":"","12":-21600000,"13":"-06:00","14":1,"16":357259581,"17":"","18":"","19":"1613563252931"}),
+        'user-agent': 'PostmanRuntime/7.26.8'
+    },
+    body: JSON.stringify({
+        "1": {
+            "1": 1,
+            "4": 0
+        },
+        "3": {
+            "1": 1,
+            "5": {
+                "2": 25
+            },
+            "7": 1
+        },
+        "4": {
+            "2": 0,
+            "4": 0,
+            "5": 322
+        },
+        "5": 2
+    })
+}).then(data => {
+    return data.json()
+}).then(data => {
+    /* data actually has everything in it, but go get
+     * an XML version so we can make sense of it */
+    const filterIds = data[2][6].map(x => x[3]).filter(x => x).map(x => x[2][1]).join(',');
+    formData.append('tfi', filterIds);
+    return fetch(filterUrl, {
+        method: 'POST',
+        body: formData
+    });
 }).then(filters => {
     return filters.text()
 }).then(filters => {
@@ -57,6 +99,10 @@ function goToFilter(filter) {
 
     if (filter.sizeUnit) {
         params.set('sizeunit', filter.sizeUnit)
+    }
+
+    if (filter.hasTheWord) {
+        params.set('has', filter.hasTheWord)
     }
 
     const fullUrl = `${baseUrl}${params.toString()}`
@@ -132,40 +178,42 @@ function showNoFiltersFoundPopup() {
 }
 
 function addFindFilterButton() {
-    const menu = document.querySelector('div[role=menu].b7.J-M')
-    const existing = document.getElementById('btnFindfilter')
-    if (existing) {
-        return;
-    }
-
-    const button = `<div class="J-N" role="menuitem" id="btnFindfilter" jslog="21576; u014N:cOuCgd,Kr2w4b" style="user-select: none;">
-    <div class="J-N-Jz">
-        <div>
-            <div id=":qo" class="cj" act="94"><img class="mL f4 J-N-JX" src="images/cleardot.gif" alt="" style="background-image: url(https://www.gstatic.com/images/icons/material/system/1x/search_black_20dp.png)">Find Filter</div>
-        </div>
-    </div>
-</div>`
-    const buttonEl = document.createElement('div')
-    buttonEl.innerHTML = button;
-    buttonEl.firstChild.onclick = function () {
-        filters = findMatchingRules(parseActiveEmail().from);
-        if (filters && filters.length > 1) {
-            showFoundFiltersPopup(filters);
-        } else if (filters && filter.length === 1) {
-            goToFilter(filters[0]);
-        } else {
-            showNoFiltersFoundPopup();
+    const menus = document.querySelectorAll('div[role=menu].b7.J-M')
+    for (const menu of menus) {
+        const existing = document.getElementById('btnFindfilter')
+        if (existing) {
+            return;
         }
+    
+        const button = `<div class="J-N" role="menuitem" id="btnFindfilter" jslog="21576; u014N:cOuCgd,Kr2w4b" style="user-select: none;">
+        <div class="J-N-Jz">
+            <div>
+                <div id=":qo" class="cj" act="94"><img class="mL f4 J-N-JX" src="images/cleardot.gif" alt="" style="background-image: url(https://www.gstatic.com/images/icons/material/system/1x/search_black_20dp.png)">Find Filter</div>
+            </div>
+        </div>
+    </div>`
+        const buttonEl = document.createElement('div')
+        buttonEl.innerHTML = button;
+        buttonEl.firstChild.onclick = function () {
+            filters = findMatchingRules(parseActiveEmail().from);
+            if (filters && filters.length > 1) {
+                showFoundFiltersPopup(filters);
+            } else if (filters && filters.length === 1) {
+                goToFilter(filters[0]);
+            } else {
+                showNoFiltersFoundPopup();
+            }
+        }
+        buttonEl.firstChild.onmouseover = e => {
+            e.currentTarget.setAttribute('class', 'J-N J-N-JT');
+        }
+    
+        buttonEl.firstChild.onmouseleave = e => {
+            e.currentTarget.setAttribute('class', 'J-N');
+        }
+    
+        menu.appendChild(buttonEl.firstChild);
     }
-    buttonEl.firstChild.onmouseover = e => {
-        e.currentTarget.setAttribute('class', 'J-N J-N-JT');
-    }
-
-    buttonEl.firstChild.onmouseleave = e => {
-        e.currentTarget.setAttribute('class', 'J-N');
-    }
-
-    menu.appendChild(buttonEl.firstChild);
 }
 
 function getEmailGrid() {
