@@ -82,27 +82,27 @@ fetch(filterDataUrl, {
 
 function findMatchingRules(from) {
     const filters = JSON.parse(sessionStorage.getItem('filters'));
-    const filter = filters.filter(x => x.from && x.from.toLowerCase() === from);
+    const filter = filters.filter(x => x.from && x.from.toLowerCase() === from.toLowerCase());
     return filter;
 }
 
 function goToFilter(filter) {
     const baseUrl = 'https://mail.google.com/mail/u/0/#create-filter/';
     const params = new URLSearchParams();
-    if (filter.from) {
-        params.set('from', filter.from)
+    const map = {
+        from: 'from',
+        sizeOperator: 'sizeoperator',
+        sizeUnit: 'sizeunit',
+        hasTheWord: 'has',
+        to: 'to',
+        id: 'id'
     }
 
-    if (filter.sizeOperator) {
-        params.set('sizeoperator', filter.sizeOperator)
-    }
-
-    if (filter.sizeUnit) {
-        params.set('sizeunit', filter.sizeUnit)
-    }
-
-    if (filter.hasTheWord) {
-        params.set('has', filter.hasTheWord)
+    keys = Object.keys(map);
+    for (const key of keys) {
+        if (filter[key]) {
+            params.set(map[key], filter[key]);
+        }
     }
 
     const fullUrl = `${baseUrl}${params.toString()}`
@@ -195,10 +195,11 @@ function waitForMenus() {
 
 function addFindFilterButton() {
     waitForMenus().then(menus => {
+        debugger
         for (const menu of menus) {
             const existing = menu.querySelector('.btnFindfilter')
             if (existing) {
-                return;
+                existing
             }
 
             const button = `<div class="J-N btnFindfilter" role="menuitem" jslog="21576; u014N:cOuCgd,Kr2w4b" style="user-select: none;">
