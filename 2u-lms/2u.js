@@ -4,6 +4,7 @@
 // @author         Jared Beach
 // @include        https://2vu.engineeringonline.vanderbilt.edu/*
 // @version        1.0
+// @namespace      2uBetter
 // ==/UserScript==
 
 function TwoVuBetter() {
