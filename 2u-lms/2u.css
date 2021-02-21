@@ -1,0 +1,49 @@
+/* override video player width */
+.diIHwN {
+  width: 90%;
+  max-width: none;
+}
+
+.video-js .vjs-control.vjs-button.vjs-control-skip-forward::before {
+  content: "⏩️ 15s";
+  font-size: 1em;
+  margin-top: 0.7em;
+}
+
+.video-js .vjs-control.vjs-button.vjs-control-skip-backward::before {
+  content: "15s ⏪️";
+  font-size: 1em;
+  margin-top: 0.7em;
+}
+
+/* Make navbar smaller */
+._14ghP {
+  height: 2rem;
+}
+
+.iQ4OR {
+  padding-bottom: 0rem;
+}
+
+._3ZoFr {
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+a._3xHwH._1X-fp._3ZoFr._35d1T._3JmQB._1_Zen {
+  padding: 1.25rem;
+  max-height: 2rem;
+  padding-top: .2rem;
+}
+
+button.HwQnp.MqMBs.eu0wt._3ZoFr._2EzoR._3Yf9L._3JmQB._1_Zen.b5T8_._3xHwH._1X-fp {
+  padding-top: .25rem;
+}
+
+button._2rbvm._15XnO.eu0wt._38vEw._1R-zt._3Yf9L._1X-fp.dWdON._1yV6P._2h91I._2m2dh._1_Zen.b5T8_._3xHwH._1X-fp.HwQnp._2QhVo._1Df9f._3fmjT.QtlnY._1oa3D._3Yf9L.iQ4OR {
+  padding-top: 0;
+}
+
+._2kjGd {
+  height: calc(100% - 2rem);
+}
