@@ -4,7 +4,7 @@ Adds enhancements to [LMS](https://en.wikipedia.org/wiki/Learning_management_sys
 
 ## Usage
 
-
+Either download the 2u.js file manually and add it to the user script extension of your choice or get it from [GreasyFork](https://greasyfork.org/en/scripts/422109-2u-better)
 
 ## Enhancements:
 
