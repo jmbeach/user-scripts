@@ -10,6 +10,9 @@
 function TwoVuBetter() {
   /** @type {import("two-vu-better").TwoVuBetter} */
   const self = this;
+  const STORAGE_PLAYBACK_RATE = 'playback-rate';
+  const STORAGE_CURRENT_TIME = 'current-time_';
+  const SKIP_SIZE = 15;
   self.vjs = undefined;
   self.player = undefined;
 
@@ -34,40 +37,64 @@ function TwoVuBetter() {
     return getWindow().document.querySelectorAll('.button.button--hover.styles__NavigationItemButton-v6r7uk-3.ijvtUw');
   }
 
+  const getCurrentSection = () => {
+    // happens when there's only one video
+    if (!getLectureButtons().length) {
+      return '';
+    }
+
+    // @ts-ignore
+    return getWindow().document.querySelector('button.button--primary.styles__NavigationItemButton-v6r7uk-3.ijvtUw').innerText;
+  }
+
+  const getStorageKeyCurrentTime = () => {
+    return STORAGE_CURRENT_TIME + window.location.href + '_' + getCurrentSection();
+  }
+
   const addSkipForwardButton = () => {
-    const script = document.createElement('script');
-    script.innerHTML = `
-    addSkipForwardButton();
-    `;
-    document.body.appendChild(script);
+    if (self.player.controlBar.getChildById('skipForwardButton')) {
+      return;
+    }
+
+    const btn = self.player.controlBar.addChild('button', {id: 'skipForwardButton'});
+    'vjs-control vjs-button vjs-control-skip-forward'.split(' ').forEach(c => {
+      btn.addClass(c);
+    });
+    // @ts-ignore
+    btn.el().onclick = () => {
+      self.player.currentTime(self.player.currentTime() + SKIP_SIZE)
+    }
   }
 
   const addSkipBackwardButton = () => {
-    const script = document.createElement('script');
-    script.innerHTML = `
-    addSkipBackwardButton();
-    `;
-    document.body.appendChild(script);
-  }
+    if (self.player.controlBar.getChildById('skipBackwardButton')) {
+      return;
+    }
 
-  const play = () => {
-    const script = document.createElement('script');
-    script.innerHTML = `
-      play();
-    `;
-    document.body.appendChild(script);
+    const btn = self.player.controlBar.addChild('button', {id: 'skipBackwardButton'});
+    'vjs-control vjs-button vjs-control-skip-backward'.split(' ').forEach(c => {
+      btn.addClass(c);
+    });
+    // @ts-ignore
+    btn.el().onclick = () => {
+      self.player.currentTime(self.player.currentTime() - SKIP_SIZE)
+    }
   }
 
   const storeCurrentTime = () => {
-    const script = document.createElement('script');
-    script.innerHTML = `
-    storeCurrentTime();
-    `;
-    document.body.appendChild(script);
+    if (self.player.paused() || self.player.currentTime() <= 1) {
+      return;
+    }
+
+    localStorage.setItem(getStorageKeyCurrentTime(), self.player.currentTime().toString());
   }
 
   const getCourseCards = () => {
     return document.querySelector('div._3N6Oy._38vEw.k83C2').children;
+  }
+
+  const onRateChange = () => {
+    localStorage.setItem(STORAGE_PLAYBACK_RATE, self.player.playbackRate().toString());
   }
 
   const onVideoEnded = () => {
@@ -96,12 +123,24 @@ function TwoVuBetter() {
     }, 500);
   }
 
+  const setCurrentTimeFromStorage = () => {
+    const storedCurrentTime = localStorage.getItem(getStorageKeyCurrentTime());
+
+    // only set if not at the very end of the video
+    if (storedCurrentTime && self.player.duration() - parseFloat(storedCurrentTime) >= 5) {
+      self.player.currentTime(parseFloat(storedCurrentTime));
+    }
+  }
+
   const setPlayBackRateFromStorage = () => {
-    const script = document.createElement('script');
-    script.innerHTML = `
-    setPlayBackRateFromStorage();
-    `;
-    document.body.appendChild(script);
+    const storedPlaybackRate = localStorage.getItem(STORAGE_PLAYBACK_RATE);
+    if (storedPlaybackRate) {
+      self.player.playbackRate(parseFloat(storedPlaybackRate));
+    }
+  }
+
+  const onDurationChanged = () => {
+    setCurrentTimeFromStorage();
   }
 
   const onLoaded = () => {
@@ -121,14 +160,14 @@ function TwoVuBetter() {
           || mutationList[0].target.className !== 'card__body') {
           return;
         }
-
+  
         onVideoChanged();
       });
-
+  
       try {
         observer.observe(document.querySelectorAll(
           '[class*=styles__Player] [class*=ContentWrapper] [class*=ElementCardWrapper] [class*=HarmonyCardStyles] .card__body')[1],
-          { childList: true });
+          {childList: true});
       }
       catch {
         // let this fail when there's only one video
@@ -138,149 +177,37 @@ function TwoVuBetter() {
     // @ts-ignore
     window.twoVuLoaded = new Date();
     addCustomCss();
-    play();
+    const player = self.vjs('vjs-player');
+    self.player = player;
     addSkipBackwardButton();
     addSkipForwardButton();
+    player.on('ratechange', onRateChange);
+    player.on('ended', onVideoEnded);
     setPlayBackRateFromStorage();
+    player.play();
+    player.on('durationchange', onDurationChanged);
     setInterval(storeCurrentTime, 1000);
   }
 
   const initVideoPage = () => {
-    sessionStorage.removeItem('VJS_LOADED');
-    // add helpers
-    const script = getWindow().document.createElement('script');
-    script.innerHTML = `
-    const SKIP_SIZE = 15;
-    const STORAGE_CURRENT_TIME = 'current-time_';
-    const STORAGE_PLAYBACK_RATE = 'playback-rate';
-    const getWindow = () => {
-      const frame = document.querySelector('iframe');
-      return (frame && frame.contentWindow) || window;
-    }
-
-    const getLectureButtons = () => {
-      return getWindow().document.querySelectorAll('.button.button--hover.styles__NavigationItemButton-v6r7uk-3.ijvtUw');
-    }
-    
-    const getPlayer = () => {
-      return getWindow().videojs('vjs-player');
-    }
-
-    const play = () => {
-      const playInterval = setInterval(() => {
-        if (!getPlayer().paused()) {
-          clearInterval(playInterval);
+    self.player = undefined;
+    const loadTimer = setInterval(() => {
+      if (typeof self.vjs === 'undefined') {
+        // @ts-ignore
+        self.vjs = getWindow().videojs;
+        if (typeof self.vjs === 'undefined') {
           return;
         }
-
-        getPlayer().play();
-      }, 250);
-    }
-
-    const addSkipForwardButton = () => {
-      if (getPlayer().controlBar.getChildById('skipForwardButton')) {
+      }
+  
+      // the player itself isn't loaded yet
+      if (!getWindow().document.getElementById('vjs-player')) {
         return;
       }
   
-      const btn = getPlayer().controlBar.addChild('button', { id: 'skipForwardButton' });
-      'vjs-control vjs-button vjs-control-skip-forward'.split(' ').forEach(c => {
-        btn.addClass(c);
-      });
-
-      btn.el().onclick = () => {
-        getPlayer().currentTime(getPlayer().currentTime() + SKIP_SIZE)
-      }
-    }
-
-    const addSkipBackwardButton = () => {
-      if (getPlayer().controlBar.getChildById('skipBackwardButton')) {
-        return;
-      }
-  
-      const btn = getPlayer().controlBar.addChild('button', { id: 'skipBackwardButton' });
-      'vjs-control vjs-button vjs-control-skip-backward'.split(' ').forEach(c => {
-        btn.addClass(c);
-      });
-
-      btn.el().onclick = () => {
-        getPlayer().currentTime(getPlayer().currentTime() - SKIP_SIZE)
-      }
-    }
-
-    const setCurrentTimeFromStorage = () => {
-      const storedCurrentTime = localStorage.getItem(getStorageKeyCurrentTime());
-  
-      // only set if not at the very end of the video
-      if (storedCurrentTime && getPlayer().duration() - parseFloat(storedCurrentTime) >= 5) {
-        getPlayer().currentTime(parseFloat(storedCurrentTime));
-      }
-    }
-
-    const storeCurrentTime = () => {
-      if (getPlayer().paused() || getPlayer().currentTime() <= 1) {
-        return;
-      }
-  
-      localStorage.setItem(getStorageKeyCurrentTime(), getPlayer().currentTime().toString());
-    }
-
-    const getCurrentSection = () => {
-      // happens when there's only one video
-      if (!getLectureButtons().length) {
-        return '';
-      }
-  
-      // @ts-ignore
-      return getWindow().document.querySelector('button.button--primary.styles__NavigationItemButton-v6r7uk-3.ijvtUw').innerText;
-    }
-  
-    const getStorageKeyCurrentTime = () => {
-      return STORAGE_CURRENT_TIME + window.location.href + '_' + getCurrentSection();
-    }
-
-    const setPlayBackRateFromStorage = () => {
-      const storedPlaybackRate = localStorage.getItem(STORAGE_PLAYBACK_RATE);
-      if (storedPlaybackRate) {
-        getPlayer().playbackRate(parseFloat(storedPlaybackRate));
-      }
-    }
-    
-    const loadInterval = setInterval(() => {
-      try {
-        const player = getPlayer();
-        if (player.readyState() < 4) {
-          return;
-        }
-
-        clearInterval(loadInterval);
-        window.postMessage({
-          type: 'VJS_LOADED'
-        })
-        player.on('ratechange', () => {
-          localStorage.setItem(STORAGE_PLAYBACK_RATE, rate);
-        });
-        player.on('ended', () => {
-          window.postMessage({ type: 'VJS_ENDED' }, '*');
-        });
-        player.on('durationchange', () => {
-          setCurrentTimeFromStorage();
-        });
-      } catch (err) {
-      }
-    }, 250)`
-    getWindow().document.body.appendChild(script);
-    getWindow().addEventListener('message', ({data}) => {
-      if (data.type === 'VJS_LOADED') {
-        if (sessionStorage.getItem('VJS_LOADED')) {
-          return;
-        }
-
-        sessionStorage.setItem('VJS_LOADED', 'true')
-        onLoaded();
-      } else if (data.type === 'VJS_ENDED') {
-        onVideoEnded();
-      }
-    });
+      clearInterval(loadTimer);
+      onLoaded();
+    }, 500);
   }
 
   const onDashboardLoaded = _ => {
@@ -344,4 +271,4 @@ function TwoVuBetter() {
 }
 
 // @ts-ignore
-globalThis.twoVuBetter = new TwoVuBetter();
+window.twoVuBetter = new TwoVuBetter();
