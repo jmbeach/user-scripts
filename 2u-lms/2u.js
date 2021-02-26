@@ -16,6 +16,7 @@ function TwoVuBetter() {
   self.vjs = undefined;
   self.player = undefined;
   self.isNavigating = false;
+  self.useCachedVideoTime = true;
 
   const getWindow = () => {
     const frame = document.querySelector('iframe');
@@ -83,7 +84,7 @@ function TwoVuBetter() {
   }
 
   const storeCurrentTime = () => {
-    if (self.isNavigating) {
+    if (self.isNavigating || !self.player) {
       return;
     }
 
@@ -131,6 +132,13 @@ function TwoVuBetter() {
   }
 
   const setCurrentTimeFromStorage = () => {
+    // Only want to do this once per load
+    if (!self.useCachedVideoTime) {
+      return;
+    }
+
+    self.useCachedVideoTime = false;
+
     const storedCurrentTime = localStorage.getItem(getStorageKeyCurrentTime());
 
     // only set if not at the very end of the video
