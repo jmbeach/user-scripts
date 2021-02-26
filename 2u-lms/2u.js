@@ -15,6 +15,7 @@ function TwoVuBetter() {
   const SKIP_SIZE = 15;
   self.vjs = undefined;
   self.player = undefined;
+  self.isNavigating = false;
 
   const getWindow = () => {
     const frame = document.querySelector('iframe');
@@ -82,6 +83,10 @@ function TwoVuBetter() {
   }
 
   const storeCurrentTime = () => {
+    if (self.isNavigating) {
+      return;
+    }
+
     if (self.player.paused() || self.player.currentTime() <= 1) {
       return;
     }
@@ -101,6 +106,8 @@ function TwoVuBetter() {
     if (parseInt(getCurrentSection()) >= getLectureButtons().length) {
       return;
     }
+
+    self.isNavigating = true;
 
     // auto-advance
     // wait for arrow to enable
@@ -141,6 +148,7 @@ function TwoVuBetter() {
 
   const onDurationChanged = () => {
     setCurrentTimeFromStorage();
+    self.isNavigating = false;
   }
 
   const onLoaded = () => {
