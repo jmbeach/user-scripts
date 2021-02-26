@@ -146,12 +146,24 @@ function TwoVuBetter() {
     }
   }
 
+  const deleteSupportChat = () => {
+    const waiter = setInterval(() => {
+      const chat = document.querySelector('.intercom-lightweight-app');
+      if (chat) {
+        clearInterval(waiter);
+        chat.remove();
+      }
+    });
+  }
+
   const onDurationChanged = () => {
     setCurrentTimeFromStorage();
     self.isNavigating = false;
   }
 
   const onLoaded = () => {
+    deleteSupportChat();
+
     // @ts-ignore
     if ((new Date() - window.twoVuLoaded) < 500) {
       return;
@@ -219,6 +231,7 @@ function TwoVuBetter() {
   }
 
   const onDashboardLoaded = _ => {
+    deleteSupportChat();
     fetch('https://2vu.engineeringonline.vanderbilt.edu/graphql', {
       method: 'POST',
       headers: {
