@@ -217,6 +217,94 @@ function TwoVuBetter() {
     setInterval(storeCurrentTime, 1000);
   }
 
+  function createPopup() {
+    const overlay = document.createElement('div');
+    overlay.style = 'background-color: rgba(0,0,0,0.3);width: 100%;height:100%;z-index:1000;display: flex; position: absolute; top:0; justify-content: center; flex-direction: column; align-items: center;';
+    const popup = document.createElement('div');
+    popup.style = "position: absolute; width: 25rem; height: 20rem; display: flex; flex-align: center; background-color: white; flex-direction: column; border-radius: 0.25rem;"
+    const toolbar = document.createElement('div')
+    toolbar.style = 'display: flex; justify-content: flex-end;'
+    const x = document.createElement('button');
+    x.style = 'background-color: #333; color: white; padding: 0.25rem 0.5rem; padding: 0.25rem;'
+    x.innerHTML = 'X';
+    x.onclick = function () {
+        overlay.remove();
+    }
+
+    toolbar.appendChild(x)
+    const content = document.createElement('div');
+    content.style = 'display: flex; flex: 1;padding: 0.25rem; overflow-y: auto; flex-direction: column';
+    popup.appendChild(toolbar);
+    popup.appendChild(content);
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+    return {
+        popup,
+        content,
+        toolbar
+    }
+}
+
+  const getCourseContentLinks = () => {
+    return document.querySelectorAll('a[href*="/segment/"]');
+  }
+
+  const waitForCourseContentLinks = () => {
+    return new Promise(resolve => {
+      const contentChecker = setInterval(() => {
+        const links = getCourseContentLinks();
+        if (links && links.length) {
+          clearInterval(contentChecker);
+          resolve(links);
+        }
+      }, 250);
+    });
+  }
+
+  const initCoursePage = () => {
+    waitForCourseContentLinks().then(links => {
+      for (const link of links) {
+        const newButton = document.createElement('button');
+        newButton.innerText = '📥';
+        newButton.setAttribute('data-href', link.getAttribute('href'))
+        newButton.onclick = e => {
+          const href = e.currentTarget.dataset.href;
+          console.log(href)
+          const section = /(?<=sections\/)[^\/]+/.exec(href)[0];
+          const segment = /(?<=segment\/)[^\/]+/.exec(href)[0];
+          fetch(`/content/v2/segments/${segment}?sectionUuid=${section}`).then(res => {
+            return res.json();
+          }).then(data => {
+            const any = data.segment.elements.filter(x => x.video_uuid);
+            const popup = createPopup();
+            if (!any.length) {
+              const warning = document.createElement('p');
+              warning.innerHTML = 'No videos found';
+              popup.content.appendChild(warning);
+              return;
+            }
+
+            const instructions = document.createElement('p');
+            instructions.innerHTML = 'Right click each link and "save as"';
+            popup.content.appendChild(instructions);
+            for (const segment of data.segment.elements) {
+              const videoLink = `/content/files-api/files/${segment.video_uuid}?label=1080p`;
+              const link = document.createElement('a');
+              link.innerHTML = segment.name;
+              link.href = videoLink;
+              popup.content.appendChild(link);
+            }
+          })
+        };
+        const buttonWrapper = document.createElement('div');
+        buttonWrapper.setAttribute('class', 'A3_E-');
+        buttonWrapper.setAttribute('role', 'cell');
+        buttonWrapper.appendChild(newButton);
+        link.parentElement.parentElement.appendChild(buttonWrapper);
+      }
+    })
+  }
+
   const initVideoPage = () => {
     self.player = undefined;
     const loadTimer = setInterval(() => {
@@ -291,8 +379,10 @@ function TwoVuBetter() {
   const init = () => {
     if (document.location.href.endsWith('dashboard')) {
       initDashboard();
-    } else {
+    } else if (document.location.href.indexOf('/segment/') > -1) {
       initVideoPage();
+    } else {
+      initCoursePage();
     }
   }
 
