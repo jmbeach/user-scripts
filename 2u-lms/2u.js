@@ -15,7 +15,7 @@ function TwoVuBetter() {
   const SKIP_SIZE = 15;
 
   // Set to true to enable debug logging
-  const log = new DebugLog(true);
+  const log = new DebugLog(false);
   self.vjs = undefined;
   self.player = undefined;
   self.isNavigating = false;
@@ -28,7 +28,7 @@ function TwoVuBetter() {
 
   const addCustomCss = () => {
     log.debug('[addCustomCss]')
-    addCss('https://gistcdn.githack.com/jmbeach/336133a1071d638c5714808db123549c/raw/6a765994ff4e0986c3de92f05a09367385419880/2u.css');
+    addCss('https://gistcdn.githack.com/jmbeach/336133a1071d638c5714808db123549c/raw/97a6f6b10c5387b65692991c828ea94cfb6cd667/2u.css');
   }
 
   const addCss = href => {
@@ -425,7 +425,9 @@ function TwoVuBetter() {
             h2.innerHTML = h2.innerHTML.replace(shortName, '');
             const smallName = document.createElement('span');
             smallName.innerHTML = shortName;
-            h2.appendChild(smallName)
+            const smallWrapper = document.createElement('div');
+            smallWrapper.appendChild(smallName);
+            h2.appendChild(smallWrapper)
           }
         }
       }
