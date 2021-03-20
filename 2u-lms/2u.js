@@ -28,7 +28,7 @@ function TwoVuBetter() {
 
   const addCustomCss = () => {
     log.debug('[addCustomCss]')
-    addCss('https://gistcdn.githack.com/jmbeach/336133a1071d638c5714808db123549c/raw/8698d855d7b1ada97c36ab4afed435f38db993b2/2u.css');
+    addCss('https://gistcdn.githack.com/jmbeach/336133a1071d638c5714808db123549c/raw/6a765994ff4e0986c3de92f05a09367385419880/2u.css');
   }
 
   const addCss = href => {
@@ -485,8 +485,12 @@ function TwoVuBetter() {
   }
 
   const init = () => {
-    const href = getWindow().document.location.href;
+    let href = getWindow().document.location.href;
     log.debug('[init]', href, document.location.href);
+    if (href === 'about:blank') {
+      href = document.location.href;
+    }
+
     if (href.endsWith('dashboard')) {
       initDashboard();
     } else if (href.indexOf('/segment/') > -1 || href.indexOf('/player/') > -1) {
