@@ -96,7 +96,12 @@ function TwoVuBetter() {
   }
 
   const getCourseCards = () => {
-    return document.querySelector('div._3N6Oy._38vEw.k83C2').children;
+    const cards = document.querySelector('div._3N6Oy._38vEw.k83C2');
+    if (cards) {
+      return cards.children;
+    }
+
+    return null;
   }
 
   const onRateChange = () => {
@@ -269,7 +274,6 @@ function TwoVuBetter() {
         newButton.setAttribute('data-href', link.getAttribute('href'))
         newButton.onclick = e => {
           const href = e.currentTarget.dataset.href;
-          console.log(href)
           const section = /(?<=sections\/)[^\/]+/.exec(href)[0];
           const segment = /(?<=segment\/)[^\/]+/.exec(href)[0];
           fetch(`/content/v2/segments/${segment}?sectionUuid=${section}`).then(res => {
@@ -377,9 +381,10 @@ function TwoVuBetter() {
   }
 
   const init = () => {
-    if (document.location.href.endsWith('dashboard')) {
+    const href = getWindow().document.location.href;
+    if (href.endsWith('dashboard')) {
       initDashboard();
-    } else if (document.location.href.indexOf('/segment/') > -1) {
+    } else if (href.indexOf('/segment/') > -1 || href.indexOf('/player/') > -1) {
       initVideoPage();
     } else {
       initCoursePage();
