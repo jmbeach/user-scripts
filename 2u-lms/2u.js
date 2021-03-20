@@ -13,6 +13,9 @@ function TwoVuBetter() {
   const STORAGE_PLAYBACK_RATE = 'playback-rate';
   const STORAGE_CURRENT_TIME = 'current-time_';
   const SKIP_SIZE = 15;
+
+  // Set to true to enable debug logging
+  const log = new DebugLog(false);
   self.vjs = undefined;
   self.player = undefined;
   self.isNavigating = false;
@@ -185,7 +188,7 @@ function TwoVuBetter() {
     // do only once
     // @ts-ignore
     if (!window.twoVuLoaded) {
-      var observer = new MutationObserver((mutationList) => {
+      const observer = new MutationObserver((mutationList) => {
         if (mutationList.length !== 2
           || mutationList[0].type !== 'childList'
           || mutationList[1].type !== 'childList'
@@ -251,7 +254,7 @@ function TwoVuBetter() {
 }
 
   const getCourseContentLinks = () => {
-    return document.querySelectorAll('a[href*="/segment/"]');
+    return document.querySelectorAll('a[href*="/segment/"].qCni6');
   }
 
   const waitForCourseContentLinks = () => {
@@ -267,8 +270,14 @@ function TwoVuBetter() {
   }
 
   const initCoursePage = () => {
+    log.debug('[initCoursePage]');
     waitForCourseContentLinks().then(links => {
       for (const link of links) {
+        // don't add multiple times
+        if (link.parentElement.parentElement.querySelector('.two-u-better')) {
+          continue;
+        }
+
         const newButton = document.createElement('button');
         newButton.innerText = '📥';
         newButton.setAttribute('data-href', link.getAttribute('href'))
@@ -301,15 +310,17 @@ function TwoVuBetter() {
           })
         };
         const buttonWrapper = document.createElement('div');
-        buttonWrapper.setAttribute('class', 'A3_E-');
+        buttonWrapper.setAttribute('class', 'A3_E- two-u-better');
         buttonWrapper.setAttribute('role', 'cell');
         buttonWrapper.appendChild(newButton);
+        
         link.parentElement.parentElement.appendChild(buttonWrapper);
       }
     })
   }
 
   const initVideoPage = () => {
+    log.debug('[initVideoPage]');
     self.player = undefined;
     const loadTimer = setInterval(() => {
       if (typeof self.vjs === 'undefined') {
@@ -371,6 +382,7 @@ function TwoVuBetter() {
   }
 
   const initDashboard = () => {
+    log.debug('[initDashboard]');
     const loadTimer = setInterval(() => {
       const cards = getCourseCards();
       if (cards && cards.length) {
@@ -380,8 +392,39 @@ function TwoVuBetter() {
     }, 250)
   }
 
+  const watchUrlChanges = () => {
+    // don't setup multiple observers
+    if (self.urlObserver) {
+      return;
+    }
+
+    // listen for URL changes
+    self.currentLocation = document.location.href;
+
+    self.urlObserver = new MutationObserver((mutationList) => {
+      if (self.currentLocation !== document.location.href) {
+        self.currentLocation = document.location.href;
+
+        // location changed
+        log.debug('[watchUrlChanges] - url changed')
+
+        init();
+      }
+    });
+
+    const root = document.getElementById('root');
+
+    // don't do this in an iFrame
+    if (!root) {
+      return;
+    }
+
+    self.urlObserver.observe(root, { childList: true, subtree: false });
+  }
+
   const init = () => {
     const href = getWindow().document.location.href;
+    log.debug('[init]', href);
     if (href.endsWith('dashboard')) {
       initDashboard();
     } else if (href.indexOf('/segment/') > -1 || href.indexOf('/player/') > -1) {
@@ -389,9 +432,18 @@ function TwoVuBetter() {
     } else {
       initCoursePage();
     }
+
+    watchUrlChanges();
   }
 
   init();
+}
+
+function DebugLog(enabled) {
+  this.debug = (...logArgs) => {
+    if (!enabled) return;
+    console.debug(...logArgs);
+  }
 }
 
 // @ts-ignore
