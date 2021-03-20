@@ -186,7 +186,8 @@ function TwoVuBetter() {
     self.isNavigating = false;
   }
 
-  const WaitForIFrameLoad = () => {
+  const waitForIFrameLoad = () => {
+    log.debug('[waitForIFrameLoad]')
     return new Promise(resolve => {
       const iframeChecker = setInterval(() => {
         const app = getWindow().document.getElementById('app');
@@ -198,17 +199,20 @@ function TwoVuBetter() {
     })
   }
 
+  // https://stackoverflow.com/a/326076/1834329
   const isIFrame = () => {
-    return window !== getWindow();
+    let result = true;
+    try {
+      result = window.self !== window.top;
+    } finally {
+      log.debug('[isIFrame]', result);
+      return result;
+    }
   }
 
   const onLoaded = () => {
+    log.debug('[onLoaded](video page)');
     deleteSupportChat();
-
-    // @ts-ignore
-    if ((new Date() - window.twoVuLoaded) < 500) {
-      return;
-    }
 
     // do only once
     // @ts-ignore
@@ -240,7 +244,7 @@ function TwoVuBetter() {
     addCustomCss();
 
     if (isDarkMode() && isIFrame()) {
-      WaitForIFrameLoad().then(app => {
+      waitForIFrameLoad().then(app => {
         app.setAttribute('class', 'darkmode-wrapper')
         const videoCard = getWindow().document.querySelector('.styles__ElementCardWrapper-sc-11m924d-4.lbbQYj');
         videoCard.setAttribute('class', 'darkmode-accent-wrapper ' + videoCard.getAttribute('class'))
@@ -262,8 +266,9 @@ function TwoVuBetter() {
   }
 
   const isDarkMode = () => {
-    // TODO:...
-    return true;
+    const result = localStorage.getItem('theme') === 'dark';
+    log.debug('[isDarkMode]', result);
+    return result;
   }
 
   function createPopup() {
