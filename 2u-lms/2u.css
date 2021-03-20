@@ -77,3 +77,43 @@ button._2rbvm._15XnO.eu0wt._38vEw._1R-zt._3Yf9L._1X-fp.dWdON._1yV6P._2h91I._2m2d
 .darkmode-accent-wrapper .styles__NavigationItemButton-v6r7uk-3 {
   color: white;
 }
+
+.two-u-better--class-name {
+  text-decoration: none;
+}
+
+.two-u-better--class-name:hover > h2 {
+  text-decoration: underline;
+}
+
+.two-u-better--class-name > h2 > span {
+  text-decoration: none;
+  display: inline-block;
+  font-size: 0.8rem;
+}
+
+.two-u-better--class-name > h2.Kkkke {
+  color: #036AD2;
+}
+
+.two-u-better--class-name > h2.Kkkke > span {
+  color: #9D9D9D;
+}
+
+.two-u-better--class-name:hover > h2.Kkkke {
+  color: #03488D;
+  text-decoration-color: #03488D;
+}
+
+.two-u-better--class-name > h2._2YbDk {
+  color: #1CD1FD;
+}
+
+.two-u-better--class-name:hover > h2._2YbDk {
+  color: #2C94FC;
+  text-decoration-color: #2C94FC;
+}
+
+.two-u-better--class-name > h2._2YbDk > span {
+  color: #52697F;
+}

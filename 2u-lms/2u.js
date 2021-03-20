@@ -15,7 +15,7 @@ function TwoVuBetter() {
   const SKIP_SIZE = 15;
 
   // Set to true to enable debug logging
-  const log = new DebugLog(false);
+  const log = new DebugLog(true);
   self.vjs = undefined;
   self.player = undefined;
   self.isNavigating = false;
@@ -27,7 +27,8 @@ function TwoVuBetter() {
   }
 
   const addCustomCss = () => {
-    addCss('https://gistcdn.githack.com/jmbeach/336133a1071d638c5714808db123549c/raw/0ba3acb720ffc9474a6415b54b4717755d6b5f3a/2u.css');
+    log.debug('[addCustomCss]')
+    addCss('https://gistcdn.githack.com/jmbeach/336133a1071d638c5714808db123549c/raw/8698d855d7b1ada97c36ab4afed435f38db993b2/2u.css');
   }
 
   const addCss = href => {
@@ -390,6 +391,7 @@ function TwoVuBetter() {
 
   const onDashboardLoaded = _ => {
     deleteSupportChat();
+    addCustomCss();
     fetch('https://2vu.engineeringonline.vanderbilt.edu/graphql', {
       method: 'POST',
       headers: {
@@ -415,10 +417,14 @@ function TwoVuBetter() {
             // for some reason the last number after the dash isn't in the page
             const nameParts = section.name.split('-');
             const shortName = `${nameParts[0]}-${nameParts[1]}`;
+            const h2Wrapper = document.createElement('a');
+            h2Wrapper.setAttribute('class', 'two-u-better--class-name')
+            h2Wrapper.href = match.getAttribute('href');
+            h2.parentNode.insertBefore(h2Wrapper, h2);
+            h2Wrapper.appendChild(h2);
             h2.innerHTML = h2.innerHTML.replace(shortName, '');
             const smallName = document.createElement('span');
             smallName.innerHTML = shortName;
-            smallName.setAttribute('style', 'font-size: 0.8rem; display: block;');
             h2.appendChild(smallName)
           }
         }
@@ -428,15 +434,24 @@ function TwoVuBetter() {
     })
   }
 
+  const waitForDashboard = () => {
+    return new Promise(resolve => {
+      const loadTimer = setInterval(() => {
+        log.debug('[waitForDashboard]', 'waiting for course cards');
+        const cards = getCourseCards();
+        if (cards && cards.length) {
+          clearInterval(loadTimer);
+          resolve(cards);
+        }
+      }, 250);
+    });
+  }
+
   const initDashboard = () => {
     log.debug('[initDashboard]');
-    const loadTimer = setInterval(() => {
-      const cards = getCourseCards();
-      if (cards && cards.length) {
-        clearInterval(loadTimer);
-        onDashboardLoaded(cards);
-      }
-    }, 250)
+    waitForDashboard().then(cards => {
+      onDashboardLoaded(cards);
+    });
   }
 
   const watchUrlChanges = () => {
@@ -471,7 +486,7 @@ function TwoVuBetter() {
 
   const init = () => {
     const href = getWindow().document.location.href;
-    log.debug('[init]', href);
+    log.debug('[init]', href, document.location.href);
     if (href.endsWith('dashboard')) {
       initDashboard();
     } else if (href.indexOf('/segment/') > -1 || href.indexOf('/player/') > -1) {
