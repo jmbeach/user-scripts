@@ -27,11 +27,20 @@ function TwoVuBetter() {
   }
 
   const addCustomCss = () => {
+    addCss('https://gistcdn.githack.com/jmbeach/336133a1071d638c5714808db123549c/raw/0ba3acb720ffc9474a6415b54b4717755d6b5f3a/2u.css');
+  }
+
+  const addCss = href => {
+    const existing = getWindow().document.querySelector(`link[href="${href}"]`);
+
+    // don't add the same stylesheet multiple times
+    if (existing) {
+      return;
+    }
     const styleTag = getWindow().document.createElement('link');
     styleTag.rel = 'stylesheet';
-    styleTag.href = 'https://rawcdn.githack.com/jmbeach/user-scripts/3b16a50b558cc9854f9786e96b5c64b8367234e8/2u-lms/2u.css';
+    styleTag.href = href;
     getWindow().document.body.prepend(styleTag);
-    window.document.body.prepend(styleTag);
   }
 
   const getNextLectureButton = () => {
@@ -177,6 +186,22 @@ function TwoVuBetter() {
     self.isNavigating = false;
   }
 
+  const WaitForIFrameLoad = () => {
+    return new Promise(resolve => {
+      const iframeChecker = setInterval(() => {
+        const app = getWindow().document.getElementById('app');
+        if (app) {
+          clearInterval(iframeChecker);
+          resolve(app);
+        }
+      }, 250);
+    })
+  }
+
+  const isIFrame = () => {
+    return window !== getWindow();
+  }
+
   const onLoaded = () => {
     deleteSupportChat();
 
@@ -213,6 +238,17 @@ function TwoVuBetter() {
     // @ts-ignore
     window.twoVuLoaded = new Date();
     addCustomCss();
+
+    if (isDarkMode() && isIFrame()) {
+      WaitForIFrameLoad().then(app => {
+        app.setAttribute('class', 'darkmode-wrapper')
+        const videoCard = getWindow().document.querySelector('.styles__ElementCardWrapper-sc-11m924d-4.lbbQYj');
+        videoCard.setAttribute('class', 'darkmode-accent-wrapper ' + videoCard.getAttribute('class'))
+        const videoInner = videoCard.children[0];
+        videoInner.setAttribute('class', 'darkmode-accent-wrapper ' + videoInner.getAttribute('class'))
+      });
+    }
+
     const player = self.vjs('vjs-player');
     self.player = player;
     addSkipBackwardButton();
@@ -223,6 +259,11 @@ function TwoVuBetter() {
     player.play();
     player.on('durationchange', onDurationChanged);
     setInterval(storeCurrentTime, 1000);
+  }
+
+  const isDarkMode = () => {
+    // TODO:...
+    return true;
   }
 
   function createPopup() {
