@@ -31,16 +31,11 @@ function TwoVuBetter() {
   }
 
   const addCss = href => {
-    const existing = getWindow().document.querySelector(`link[href="${href}"]`);
-
-    // don't add the same stylesheet multiple times
-    if (existing) {
-      return;
-    }
     const styleTag = getWindow().document.createElement('link');
     styleTag.rel = 'stylesheet';
     styleTag.href = href;
     getWindow().document.body.prepend(styleTag);
+    document.body.prepend(styleTag);
   }
 
   const getNextLectureButton = () => {
@@ -243,14 +238,20 @@ function TwoVuBetter() {
     window.twoVuLoaded = new Date();
     addCustomCss();
 
-    if (isDarkMode() && isIFrame()) {
-      waitForIFrameLoad().then(app => {
-        app.setAttribute('class', 'darkmode-wrapper')
-        const videoCard = getWindow().document.querySelector('.styles__ElementCardWrapper-sc-11m924d-4.lbbQYj');
-        videoCard.setAttribute('class', 'darkmode-accent-wrapper ' + videoCard.getAttribute('class'))
-        const videoInner = videoCard.children[0];
-        videoInner.setAttribute('class', 'darkmode-accent-wrapper ' + videoInner.getAttribute('class'))
-      });
+    if (isDarkMode()) {
+      if (isIFrame()) {
+        waitForIFrameLoad().then(app => {
+          app.setAttribute('class', 'darkmode-wrapper')
+          getWindow().document.querySelector('html').setAttribute('class', 'darkmode-wrapper')
+          const videoCard = getWindow().document.querySelector('.styles__ElementCardWrapper-sc-11m924d-4.lbbQYj');
+          videoCard.setAttribute('class', 'darkmode-accent-wrapper ' + videoCard.getAttribute('class'))
+          const videoInner = videoCard.children[0];
+          videoInner.setAttribute('class', 'darkmode-accent-wrapper ' + videoInner.getAttribute('class'))
+        });
+      } else {
+        const root = document.getElementById('root');
+        root.setAttribute('class', 'darkmode-wrapper');
+      }
     }
 
     const player = self.vjs('vjs-player');
