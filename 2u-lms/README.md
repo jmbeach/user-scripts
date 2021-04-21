@@ -6,7 +6,9 @@ Adds enhancements to [LMS](https://en.wikipedia.org/wiki/Learning_management_sys
 
 ## Usage
 
-Copy the contents of the 2u.js file and paste it into a custom javascript extension such as [cjs](https://chrome.google.com/webstore/detail/custom-javascript-for-web/poakhlngfciodnhlhhgnaaelnpjljija?hl=en). Note: I tried to get this to work as a traditional user script, but the video player enhancements would not work.
+Install [CJS2](https://chrome.google.com/webstore/detail/custom-javascript-for-web/ddbjnfjiigjmcpcpkmhogomapikjbjdk?hl=en) to inject custom JavaScript into any website. Scripts in CJS are registered per domain, so go to the 2U website, click on the extension icon and add [https://jareds-cdn.s3.amazonaws.com/2u.js](https://jareds-cdn.s3.amazonaws.com/2u.js) as an external script. After saving, 2U Better should be enabled.
+
+![install](./install.png)
 
 ## Enhancements:
 
